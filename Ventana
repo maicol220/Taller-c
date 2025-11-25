@@ -1,0 +1,171 @@
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class Ventana {
+    private JTabbedPane tabbedPane1;
+    private JPanel panel1;
+    private JTextField txtId;
+    private JTextField txtNombre;
+    private JComboBox cboRango;
+    private JTextField txtConstelacion;
+    private JTextField txtPoder;
+    private JTextField txtMision;
+    private JTextField txtDificultad;
+    private JTextField txtRecompensa;
+    private JButton btnRegistrar;
+    private JButton btnModificarPorId;
+    private JList lstMostrarDatos;
+    private JButton btnOrdenarPorId;
+    private JButton btnOrdenarPorNombre;
+    private JButton btnOrdenarPorPoder;
+    private JList lstReporte;
+    private JButton btnMostrarReporte;
+
+    private DefaultListModel<String> modelo = new DefaultListModel<>();
+    private DefaultListModel<String> modeloReporte = new DefaultListModel<>();
+
+    private Santuario santuario = new Santuario();
+
+    private void llenarLista() {
+        modelo.clear();
+        for (Caballero c : santuario.getLista()) {
+            modelo.addElement(c.toString());
+        }
+        lstMostrarDatos.setModel(modelo);
+    }
+    private void llenarReporte() {
+        modeloReporte.clear();
+        for (Caballero c : santuario.getLista()) {
+            double aporte = c.calcularAporte();
+            double impuesto = c.calcularImpuesto();
+            double neto = c.getRecompensa() - aporte - impuesto;
+
+            modeloReporte.addElement(
+                    "Nombre del caballero: " + c.getNombre() +
+                            "  Rango: " + c.getRango() +
+                            "  Constelación: " + c.getConstelacion() +
+                            "  Nivel de poder: " + c.getNivelPoder() +
+                            "  Misión asignada: " + c.getMision() +
+                            "  Recompensa: " + c.getRecompensa() +
+                            "  Aporte al Fondo del Santuario: " + aporte +
+                            "  Impuesto del Reino: " + impuesto +
+                            "  Recompensa neta a recibir: " + neto
+            );
+        }
+        lstReporte.setModel(modeloReporte);
+    }
+public Ventana(){
+    btnRegistrar.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                int id = Integer.parseInt(txtId.getText());
+
+                if (santuario.existeID(id)) {
+                    JOptionPane.showMessageDialog(null, "ERROR: El ID ya existe. Ingrese otro ID.");
+                    return;
+                }
+
+                String nombre = txtNombre.getText();
+                String rango = cboRango.getSelectedItem().toString();
+                String constelacion = txtConstelacion.getText();
+                int poder = Integer.parseInt(txtPoder.getText());
+                int dificultad = Integer.parseInt(txtDificultad.getText());
+                double recompensa = Double.parseDouble(txtRecompensa.getText());
+                String mision = txtMision.getText();
+
+                Caballero cab = new Caballero(id, nombre, rango, constelacion,
+                        poder, mision, dificultad, recompensa);
+
+                santuario.agregar(cab);
+                llenarLista();
+
+                JOptionPane.showMessageDialog(null, "Caballero registrado");
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Error: verificar datos ingresados");
+            }
+        }
+    });
+    btnModificarPorId.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+
+                int id = Integer.parseInt(txtId.getText());
+                Caballero c = santuario.buscarPorID(id);
+
+                if (c == null) {
+                    JOptionPane.showMessageDialog(null, "ID no encontrado");
+                    return;
+                }
+
+                c.setNombre(txtNombre.getText());
+                c.setRango(cboRango.getSelectedItem().toString());
+                c.setConstelacion(txtConstelacion.getText());
+
+                int poder = Integer.parseInt(txtPoder.getText());
+                if (poder < 1 || poder > 10) {
+                    JOptionPane.showMessageDialog(null, "El nivel de poder debe ser entre 1 y 10");
+                    return;
+                }
+                c.setNivelPoder(poder);
+
+                c.setMision(txtMision.getText());
+
+                int dif = Integer.parseInt(txtDificultad.getText());
+                if (dif < 1 || dif > 5) {
+                    JOptionPane.showMessageDialog(null, "La dificultad debe ser entre 1 y 5");
+                    return;
+                }
+                c.setDificultad(dif);
+
+                c.setRecompensa(Double.parseDouble(txtRecompensa.getText()));
+
+                llenarLista();
+
+                JOptionPane.showMessageDialog(null, "Datos modificados correctamente.");
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Error en datos.");
+            }
+        }
+    });
+    btnOrdenarPorId.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            santuario.ordenarPorID();
+            llenarLista();
+        }
+    });
+    btnOrdenarPorNombre.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            santuario.ordenarPorNombre();
+            llenarLista();
+        }
+    });
+    btnOrdenarPorPoder.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            santuario.ordenarPorPoder();
+            llenarLista();
+        }
+    });
+    btnMostrarReporte.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            llenarReporte();
+        }
+    });
+}
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Ventana");
+        frame.setContentPane(new Ventana().panel1);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
+    }
+}
